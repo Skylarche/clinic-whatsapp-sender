@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediFlow - WhatsApp Lab Result Dispatcher</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        teal: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            700: '#0f766e',
+                            800: '#115e59',
+                            900: '#134e4a',
+                        },
+                        wa: {
+                            green: '#25D366',
+                            dark: '#075E54',
+                            light: '#DCF8C6',
+                            teal: '#128C7E'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-teal-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center text-white font-bold text-xl shadow-md shadow-teal-600/20">
+                        <i class="fa-solid fa-flask-vial"></i>
+                    </div>
+                    <div>
+                        <span class="text-xl font-bold text-slate-900 tracking-tight">Medi<span class="text-teal-600">Flow</span></span>
+                        <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded-full bg-teal-100 text-teal-800 border border-teal-200">Lab Dispatch</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <button onclick="toggleApiDocs()" class="inline-flex items-center space-x-2 text-sm text-slate-600 hover:text-teal-600 font-medium px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors">
+                        <i class="fa-solid fa-code text-teal-600"></i>
+                        <span class="hidden sm:inline">Automated API Guide</span>
+                    </button>
+                    <div class="h-6 w-px bg-slate-200"></div>
+                    <div class="flex items-center space-x-3 pl-2">
+                        <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-semibold text-sm">
+                            DR
+                        </div>
+                        <div class="hidden md:block text-left">
+                            <p class="text-sm font-semibold text-slate-800 leading-none">Central Lab Clinic</p>
+                            <p class="text-xs text-slate-500 mt-0.5">Staff Dispatch Desk</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notification Banner / Toast Container -->
+    <div id="toast-container" class="fixed top-20 right-5 z-50 flex flex-col space-y-2"></div>
+
+    <!-- Main Content Grid -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left Column: Patient Entry Form & Options (7 Cols) -->
+        <section class="lg:col-span-7 space-y-6">
+            
+            <!-- Quick Info Banner -->
+            <div class="bg-gradient-to-r from-teal-900 to-slate-900 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </div>
+                <div class="relative z-10">
+                    <div class="inline-flex items-center space-x-2 bg-teal-500/30 text-teal-200 px-3 py-1 rounded-full text-xs font-semibold mb-3 backdrop-blur-sm border border-teal-400/20">
+                        <i class="fa-solid fa-bolt"></i> Direct WhatsApp Messaging
+                    </div>
+                    <h1 class="text-2xl font-bold tracking-tight">Send Patient Results Instantly</h1>
+                    <p class="text-slate-300 text-sm mt-1 max-w-xl">
+                        Fill out patient details, attach PDF test report, select a predefined template, and dispatch directly via WhatsApp.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Main Form Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+                
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div class="flex items-center space-x-3">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-50 text-teal-600 font-bold text-sm">1</span>
+                        <h2 class="text-lg font-bold text-slate-900">Patient & Test Information</h2>
+                    </div>
+                    <button type="button" onclick="resetForm()" class="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors">
+                        <i class="fa-solid fa-rotate-left mr-1"></i> Clear Form
+                    </button>
+                </div>
+
+                <form id="dispatch-form" onsubmit="handleSend(event)" class="space-y-5">
+                    
+                    <!-- Row 1: Patient Name & Patient ID -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Patient Full Name <span class="text-red-500">*</span></label>
+                            <div class="relative rounded-xl shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-regular fa-user"></i>
+                                </div>
+                                <input type="text" id="patient-name" required placeholder="e.g. Sarah Jenkins" oninput="updatePreview()"
+                                    class="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Patient / Lab ID <span class="text-red-500">*</span></label>
+                            <div class="relative rounded-xl shadow-sm">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-solid fa-hashtag"></i>
+                                </div>
+                                <input type="text" id="patient-id" required placeholder="e.g. LAB-2026-889" oninput="updatePreview()"
+                                    class="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Phone Number with Country Code -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">WhatsApp Phone Number <span class="text-red-500">*</span></label>
+                        <div class="flex rounded-xl shadow-sm">
+                            <select id="country-code" onchange="updatePreview()" class="inline-flex items-center px-3 py-2.5 rounded-l-xl border border-r-0 border-slate-200 bg-slate-50 text-slate-700 text-sm font-medium focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:z-10">
+                                <option value="1">+1 (USA/CAN)</option>
+                                <option value="44">+44 (UK)</option>
+                                <option value="965" selected>+965 (Kuwait)</option>
+                                <option value="971">+971 (UAE)</option>
+                                <option value="966">+966 (Saudi Arabia)</option>
+                                <option value="91">+91 (India)</option>
+                                <option value="61">+61 (Australia)</option>
+                                <option value="49">+49 (Germany)</option>
+                                <option value="33">+33 (France)</option>
+                                <option value="63">+63 (Philippines)</option>
+                            </select>
+                            <div class="relative flex-1">
+                                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                    <i class="fa-brands fa-whatsapp text-emerald-500 font-bold"></i>
+                                </div>
+                                <input type="tel" id="patient-phone" required placeholder="98765432" oninput="updatePreview()"
+                                    class="block w-full pl-10 pr-3 py-2.5 sm:text-sm border border-slate-200 rounded-r-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all">
+                            </div>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-400">Enter digits without spaces or leading zeros (e.g. 98765432).</p>
+                    </div>
+
+                    <!-- Row 3: Test Category & Physician Name -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Test Category</label>
+                            <select id="test-category" onchange="updatePreview()" class="block w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white">
+                                <option value="Complete Blood Count (CBC)">Complete Blood Count (CBC)</option>
+                                <option value="Comprehensive Metabolic Panel">Comprehensive Metabolic Panel</option>
+                                <option value="Lipid Profile Test">Lipid Profile Test</option>
+                                <option value="Thyroid Function Test (TSH)">Thyroid Function Test (TSH)</option>
+                                <option value="COVID-19 / Respiratory PCR">COVID-19 / Respiratory PCR</option>
+                                <option value="Urinalysis & Cultures">Urinalysis & Cultures</option>
+                                <option value="General Health Screening">General Health Screening</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Attending Doctor / Clinic</label>
+                            <input type="text" id="doctor-name" placeholder="Dr. Alex Vance" value="Dr. Alex Vance" oninput="updatePreview()"
+                                class="block w-full px-3 py-2.5 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                        </div>
+                    </div>
+
+                    <!-- PDF Upload Section -->
+                    <div class="pt-2">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Attach Patient Result (PDF File)</label>
+                        <div id="drop-zone" onclick="document.getElementById('file-input').click()" 
+                            class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-teal-500 hover:bg-teal-50/50 cursor-pointer transition-all group">
+                            <input type="file" id="file-input" accept="application/pdf" class="hidden" onchange="handleFileSelect(event)">
+                            <div id="upload-idle" class="space-y-2">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 group-hover:bg-teal-100 text-slate-500 group-hover:text-teal-600 flex items-center justify-center mx-auto transition-colors">
+                                    <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                                </div>
+                                <div class="text-sm font-medium text-slate-700">
+                                    <span class="text-teal-600 underline">Click to upload</span> or drag and drop
+                                </div>
+                                <p class="text-xs text-slate-400">PDF lab reports only (Max size: 10MB)</p>
+                            </div>
+                            <!-- Uploaded State -->
+                            <div id="upload-success" class="hidden flex items-center justify-between bg-teal-50 p-3 rounded-lg border border-teal-200 text-left">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold text-lg">
+                                        <i class="fa-regular fa-file-pdf"></i>
+                                    </div>
+                                    <div>
+                                        <p id="file-name" class="text-sm font-semibold text-slate-800 truncate max-w-xs">lab_report.pdf</p>
+                                        <p id="file-size" class="text-xs text-slate-500">2.4 MB • Ready to dispatch</p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="removeFile(event)" class="text-slate-400 hover:text-red-500 p-2 transition-colors">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template Selector Section -->
+                    <div class="pt-4 border-t border-slate-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider">Select WhatsApp Template</label>
+                            <span class="text-xs text-teal-600 font-medium cursor-pointer hover:underline" onclick="toggleCustomTemplate()">
+                                <i class="fa-solid fa-pen"></i> Edit Custom Text
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <label class="relative flex flex-col p-3 border rounded-xl cursor-pointer hover:border-teal-500 transition-all" id="tpl-card-normal">
+                                <input type="radio" name="template" value="normal" checked onchange="changeTemplate('normal')" class="sr-only">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Standard Result
+                                </span>
+                                <span class="text-xs text-slate-500 mt-1">Normal findings notification with cloud link.</span>
+                            </label>
+
+                            <label class="relative flex flex-col p-3 border rounded-xl cursor-pointer hover:border-teal-500 transition-all" id="tpl-card-urgent">
+                                <input type="radio" name="template" value="urgent" onchange="changeTemplate('urgent')" class="sr-only">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-amber-500"></span> Follow-Up Required
+                                </span>
+                                <span class="text-xs text-slate-500 mt-1">Urgent request to consult attending physician.</span>
+                            </label>
+
+                            <label class="relative flex flex-col p-3 border rounded-xl cursor-pointer hover:border-teal-500 transition-all" id="tpl-card-custom">
+                                <input type="radio" name="template" value="custom" onchange="changeTemplate('custom')" class="sr-only">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-blue-500"></span> Custom Note
+                                </span>
+                                <span class="text-xs text-slate-500 mt-1">Write your own message structure manually.</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Custom Message Editable Textarea (Hidden by default unless selected) -->
+                    <div id="custom-textarea-container" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Custom Message Format</label>
+                        <textarea id="custom-message-text" rows="4" oninput="updatePreview()" class="block w-full p-3 sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-mono text-xs" placeholder="Use tags: {patient_name}, {lab_id}, {test_name}, {doctor}"></textarea>
+                    </div>
+
+                    <!-- Submit Actions -->
+                    <div class="pt-4 flex flex-col sm:flex-row items-center gap-3">
+                        <button type="submit" class="w-full sm:w-1/2 bg-wa-green hover:bg-emerald-600 text-white font-semibold py-3 px-6 rounded-xl shadow-md shadow-emerald-500/20 flex items-center justify-center space-x-2 transition-all transform active:scale-95">
+                            <i class="fa-brands fa-whatsapp text-xl"></i>
+                            <span>Open WhatsApp & Send</span>
+                        </button>
+
+                        <button type="button" onclick="saveAsPendingLog()" class="w-full sm:w-1/2 bg-slate-800 hover:bg-slate-900 text-white font-semibold py-3 px-6 rounded-xl shadow-md flex items-center justify-center space-x-2 transition-all">
+                            <i class="fa-solid fa-list-check text-slate-300"></i>
+                            <span>Log to Sent Queue</span>
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <!-- Right Column: Live WhatsApp Mobile Preview & Quick Links (5 Cols) -->
+        <section class="lg:col-span-5 space-y-6 flex flex-col">
+            
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex-1 flex flex-col">
+                
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">
+                    <div class="flex items-center space-x-3">
+                        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-wa-green/10 text-wa-green font-bold text-sm">2</span>
+                        <h2 class="text-lg font-bold text-slate-900">Live WhatsApp Preview</h2>
+                    </div>
+                    <span class="inline-flex items-center text-xs text-slate-400">
+                        <i class="fa-solid fa-lock text-xs mr-1"></i> End-to-End Encrypted
+                    </span>
+                </div>
+
+                <!-- Simulated Smartphone Screen -->
+                <div class="w-full max-w-sm mx-auto bg-slate-900 rounded-[2.5rem] p-3 shadow-2xl border-4 border-slate-800 flex-1 flex flex-col">
+                    <!-- Phone Notch & Speaker -->
+                    <div class="w-full flex justify-center pb-2 pt-1">
+                        <div class="w-20 h-4 bg-slate-800 rounded-full flex items-center justify-center space-x-2">
+                            <div class="w-2 h-2 rounded-full bg-slate-700"></div>
+                            <div class="w-8 h-1.5 bg-slate-700 rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp Header -->
+                    <div class="bg-wa-dark text-white p-3 rounded-t-2xl flex items-center space-x-3">
+                        <i class="fa-solid fa-arrow-left text-sm"></i>
+                        <div class="w-8 h-8 rounded-full bg-slate-300 flex items-center justify-center text-slate-700 font-bold text-xs overflow-hidden">
+                            <img src="https://placehold.co/100x100/075E54/white?text=CL" alt="Avatar" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold truncate leading-tight">Central Lab Clinic</p>
+                            <p class="text-[10px] text-emerald-200">Official Business Account</p>
+                        </div>
+                        <div class="flex space-x-3 text-xs text-white/80">
+                            <i class="fa-solid fa-video"></i>
+                            <i class="fa-solid fa-phone"></i>
+                            <i class="fa-solid fa-ellipsis-vertical"></i>
+                        </div>
+                    </div>
+
+                    <!-- WhatsApp Chat Area -->
+                    <div class="flex-1 bg-[#efeae2] p-3 overflow-y-auto custom-scrollbar flex flex-col justify-end space-y-2 rounded-b-2xl relative min-h-[360px]" style="background-image: radial-gradient(#cbd5e1 0.75px, transparent 0.75px); background-size: 12px 12px;">
+                        
+                        <!-- Date Badge -->
+                        <div class="text-center my-2">
+                            <span class="bg-white/80 text-[10px] text-slate-600 font-semibold px-2.5 py-1 rounded-md shadow-xs uppercase tracking-wider">
+                                Today
+                            </span>
+                        </div>
+
+                        <!-- Chat Message Bubble -->
+                        <div class="self-end max-w-[90%] bg-wa-light text-slate-800 rounded-lg p-3 shadow-sm relative text-xs leading-relaxed border border-emerald-200/50">
+                            
+                            <!-- PDF Document Attachment Card -->
+                            <div id="preview-pdf-card" class="bg-emerald-100/80 rounded-md p-2.5 mb-2.5 flex items-center space-x-3 border border-emerald-300/60">
+                                <div class="w-8 h-10 bg-red-500 text-white rounded flex items-center justify-center font-bold text-xs flex-shrink-0 shadow-xs">
+                                    PDF
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <p id="preview-pdf-name" class="font-bold text-slate-900 truncate text-[11px]">LAB_RESULTS_PENDING.pdf</p>
+                                    <p class="text-[9px] text-slate-600">Secure Medical File • 2.4 MB</p>
+                                </div>
+                                <i class="fa-solid fa-circle-arrow-down text-emerald-700 text-base"></i>
+                            </div>
+
+                            <!-- Text Content -->
+                            <div id="preview-text-body" class="whitespace-pre-wrap font-sans text-slate-900">
+                                <!-- Dynamic Preview Populated by JS -->
+                            </div>
+
+                            <!-- Time and Status -->
+                            <div class="flex items-center justify-end space-x-1 mt-1.5 text-[9px] text-slate-500">
+                                <span id="preview-time">10:46 AM</span>
+                                <i class="fa-solid fa-check-double text-blue-500"></i>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Generated Direct Link Box -->
+                <div class="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-1">Generated wa.me Link</span>
+                    <div class="flex items-center space-x-2">
+                        <input type="text" id="generated-link" readonly value="https://wa.me/..." 
+                            class="block w-full text-xs bg-white border border-slate-200 rounded-lg p-2 font-mono text-slate-600 truncate focus:outline-none">
+                        <button onclick="copyGeneratedLink()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-medium transition-colors">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Bottom Section: Dispatch History Log Table -->
+    <section class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Recent Dispatch Log</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Audit log of lab result notifications issued today</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                        <input type="text" id="log-search" oninput="filterLogs()" placeholder="Search patient or ID..." 
+                            class="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 w-48">
+                    </div>
+                    <button onclick="exportLogsCSV()" class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                        <i class="fa-solid fa-download mr-1"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider">
+                            <th class="py-3 px-4">Time</th>
+                            <th class="py-3 px-4">Patient Name</th>
+                            <th class="py-3 px-4">Lab / Patient ID</th>
+                            <th class="py-3 px-4">WhatsApp Number</th>
+                            <th class="py-3 px-4">Test Category</th>
+                            <th class="py-3 px-4">Status</th>
+                            <th class="py-3 px-4 text-right">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dispatch-history-body" class="divide-y divide-slate-100 text-slate-700">
+                        <!-- Populated dynamically via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Automated API Integration Modal (Instructions) -->
+    <div id="api-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-3xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-6 bg-slate-900 text-white flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-lg bg-teal-500/20 text-teal-400 flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Automated Background Sending Guide</h3>
+                        <p class="text-xs text-slate-400">Upgrade from `wa.me` manual links to 100% automated API dispatching</p>
+                    </div>
+                </div>
+                <button onclick="toggleApiDocs()" class="text-slate-400 hover:text-white p-2 text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto space-y-6 text-sm text-slate-600 custom-scrollbar">
+                
+                <div class="p-4 bg-teal-50 border border-teal-200 rounded-xl text-teal-900">
+                    <p class="font-semibold text-xs uppercase tracking-wide text-teal-700">Why Use Backend API?</p>
+                    <p class="mt-1 text-xs">
+                        The current browser version uses standard WhatsApp Web deep links (<code class="bg-teal-100 text-teal-800 px-1 py-0.5 rounded">wa.me</code>). To send PDFs automatically in the background directly from your Lab Information System (LIS), you can connect to the official <strong>WhatsApp Business Cloud API</strong> or <strong>Twilio for WhatsApp</strong>.
+                    </p>
+                </div>
+
+                <div class="space-y-4">
+                    <h4 class="font-bold text-slate-900 text-base">Option A: Official Meta WhatsApp Cloud API (Node.js Example)</h4>
+                    <p class="text-xs">Send approved message templates directly via HTTP Requests:</p>
+                    <pre class="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto">
+// Example Node.js / Express snippet for WhatsApp Business API
+const axios = require('axios');
+
+async function sendLabResultPDF(patientPhone, pdfUrl, patientName) {
+  const url = `https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_ID}/messages`;
+  
+  const payload = {
+    messaging_product: "whatsapp",
+    to: patientPhone, // International format without +
+    type: "template",
+    template: {
+      name: "lab_result_notification",
+      language: { code: "en_US" },
+      components: [
+        {
+          type: "header",
+          parameters: [{
+            type: "document",
+            document: {
+              link: pdfUrl,
+              filename: `${patientName}_Lab_Result.pdf`
+            }
+          }]
+        },
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: patientName }
+          ]
+        }
+      ]
+    }
+  };
+
+  await axios.post(url, payload, {
+    headers: { Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}` }
+  });
+}</pre>
+                </div>
+
+                <div class="space-y-3 border-t border-slate-100 pt-4">
+                    <h4 class="font-bold text-slate-900 text-base">Key Steps to Set Up Full Automation:</h4>
+                    <ol class="list-decimal pl-5 space-y-2 text-xs text-slate-600">
+                        <li>Register a Meta Developer account and set up a WhatsApp Business App.</li>
+                        <li>Submit your message templates (e.g., "Lab Report Ready") for Meta verification.</li>
+                        <li>Upload generated lab report PDFs to a secure Cloud Storage bucket (AWS S3, Google Cloud, etc.) to get a public signed URL.</li>
+                        <li>Call the backend API upon PDF generation to automatically notify patients instantly.</li>
+                    </ol>
+                </div>
+
+            </div>
+
+            <div class="p-4 bg-slate-50 border-t border-slate-200 text-right">
+                <button onclick="toggleApiDocs()" class="px-5 py-2 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-slate-900 transition-colors">
+                    Close Guide
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Default Sample History Data
+        let sampleHistory = [
+            {
+                time: "10:30 AM",
+                name: "John Miller",
+                id: "LAB-2026-901",
+                phone: "+965 91234567",
+                category: "Complete Blood Count (CBC)",
+                status: "Sent",
+                fileName: "John_Miller_CBC.pdf"
+            },
+            {
+                time: "09:45 AM",
+                name: "Elena Rostova",
+                id: "LAB-2026-885",
+                phone: "+1 4155552671",
+                category: "Thyroid Function Test (TSH)",
+                status: "Sent",
+                fileName: "Elena_TSH_Report.pdf"
+            },
+            {
+                time: "09:12 AM",
+                name: "Ahmed Al-Mansoor",
+                id: "LAB-2026-874",
+                phone: "+965 65432109",
+                category: "Lipid Profile Test",
+                status: "Pending",
+                fileName: "Ahmed_Lipid_Profile.pdf"
+            }
+        ];
+
+        // Message Templates
+        const TEMPLATES = {
+            normal: `Dear *{patient_name}*,\n\nYour lab results for *{test_name}* (Ref ID: *{lab_id}*) from Central Lab Clinic are ready.\n\n👨‍⚕️ Attending Physician: {doctor}\n\nPlease review your attached report file. If you have questions regarding your results, feel free to contact our desk.\n\nStay Healthy,\n*Central Lab Clinic*`,
+            
+            urgent: `IMPORTANT: Dear *{patient_name}*,\n\nYour laboratory test results for *{test_name}* (ID: *{lab_id}*) are now available.\n\n⚠️ *Action Required:* *{doctor}* requests a follow-up consultation regarding your findings.\n\nPlease call our clinic reception at +965 2200 0000 at your earliest convenience.`,
+            
+            custom: `Hello {patient_name}, your test result for {test_name} (ID: {lab_id}) is attached below. Contact {doctor} for details.`
+        };
+
+        let selectedTemplateKey = 'normal';
+        let currentUploadedFile = null;
+
+        // Initialize on Load
+        window.onload = function() {
+            // Set current time for mobile preview
+            const now = new Date();
+            document.getElementById('preview-time').innerText = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            // Set custom textarea initial value
+            document.getElementById('custom-message-text').value = TEMPLATES.custom;
+
+            // Render Preview and Logs
+            updatePreview();
+            renderLogs();
+            setupDragAndDrop();
+        };
+
+        // Update Live Preview Text & Link
+        function updatePreview() {
+            const name = document.getElementById('patient-name').value.trim() || 'Patient Name';
+            const labId = document.getElementById('patient-id').value.trim() || 'LAB-XXXX';
+            const testCategory = document.getElementById('test-category').value;
+            const doctor = document.getElementById('doctor-name').value.trim() || 'Dr. Alex Vance';
+            const countryCode = document.getElementById('country-code').value;
+            const rawPhone = document.getElementById('patient-phone').value.trim();
+
+            let rawTemplate = '';
+            if (selectedTemplateKey === 'custom') {
+                rawTemplate = document.getElementById('custom-message-text').value;
+            } else {
+                rawTemplate = TEMPLATES[selectedTemplateKey];
+            }
+
+            // Replace Placeholders
+            let finalMessage = rawTemplate
+                .replace(/{patient_name}/g, name)
+                .replace(/{lab_id}/g, labId)
+                .replace(/{test_name}/g, testCategory)
+                .replace(/{doctor}/g, doctor);
+
+            // Format Preview Text (Convert WhatsApp Markdown *bold* for HTML display)
+            let formattedHtml = finalMessage
+                .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+
+            document.getElementById('preview-text-body').innerHTML = formattedHtml;
+
+            // Update wa.me Link
+            const fullPhone = countryCode + rawPhone.replace(/\D/g, '');
+            const encodedText = encodeURIComponent(finalMessage);
+            const waUrl = fullPhone ? `https://wa.me/${fullPhone}?text=${encodedText}` : 'https://wa.me/...';
+            document.getElementById('generated-link').value = waUrl;
+        }
+
+        // Change Message Template Selection
+        function changeTemplate(key) {
+            selectedTemplateKey = key;
+            
+            // Toggle highlight styles on template radio boxes
+            ['normal', 'urgent', 'custom'].forEach(k => {
+                const card = document.getElementById(`tpl-card-${k}`);
+                if (k === key) {
+                    card.classList.add('border-teal-500', 'bg-teal-50/30', 'ring-1', 'ring-teal-500');
+                    card.classList.remove('border-slate-200');
+                } else {
+                    card.classList.remove('border-teal-500', 'bg-teal-50/30', 'ring-1', 'ring-teal-500');
+                    card.classList.add('border-slate-200');
+                }
+            });
+
+            // Toggle custom textarea container
+            const customContainer = document.getElementById('custom-textarea-container');
+            if (key === 'custom') {
+                customContainer.classList.remove('hidden');
+            } else {
+                customContainer.classList.add('hidden');
+            }
+
+            updatePreview();
+        }
+
+        function toggleCustomTemplate() {
+            const radioCustom = document.querySelector('input[name="template"][value="custom"]');
+            radioCustom.checked = true;
+            changeTemplate('custom');
+        }
+
+        // File Selection Handlers
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            processFile(file);
+        }
+
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('drop-zone');
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.add('border-teal-500', 'bg-teal-50/50');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dropZone.classList.remove('border-teal-500', 'bg-teal-50/50');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const file = dt.files[0];
+                processFile(file);
+            });
+        }
+
+        function processFile(file) {
+            if (!file) return;
+
+            if (file.type !== 'application/pdf') {
+                showToast('Please upload a valid PDF file.', 'error');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showToast('File size exceeds maximum 10MB limit.', 'error');
+                return;
+            }
+
+            currentUploadedFile = file;
+            
+            // Update UI Form Dropzone
+            document.getElementById('upload-idle').classList.add('hidden');
+            document.getElementById('upload-success').classList.remove('hidden');
+            document.getElementById('file-name').innerText = file.name;
+            document.getElementById('file-size').innerText = `${(file.size / (1024 * 1024)).toFixed(2)} MB • PDF Attached`;
+
+            // Update Phone Preview Box
+            document.getElementById('preview-pdf-name').innerText = file.name;
+
+            showToast('Lab report PDF attached successfully!');
+        }
+
+        function removeFile(e) {
+            if (e) e.stopPropagation();
+            currentUploadedFile = null;
+            document.getElementById('file-input').value = '';
+            document.getElementById('upload-idle').classList.remove('hidden');
+            document.getElementById('upload-success').classList.add('hidden');
+            document.getElementById('preview-pdf-name').innerText = 'LAB_RESULTS_PENDING.pdf';
+            showToast('Attachment removed', 'info');
+        }
+
+        // Send Logic (Trigger WhatsApp Web)
+        function handleSend(e) {
+            e.preventDefault();
+
+            const phoneNum = document.getElementById('patient-phone').value.trim();
+            if (!phoneNum) {
+                showToast('Please enter a valid phone number.', 'error');
+                return;
+            }
+
+            const waUrl = document.getElementById('generated-link').value;
+            
+            // Log to queue
+            addLogItem('Sent');
+
+            // Open WhatsApp Deep Link
+            window.open(waUrl, '_blank');
+
+            showToast('Opening WhatsApp Web to dispatch message...', 'success');
+        }
+
+        // Save entry into audit log table
+        function saveAsPendingLog() {
+            const name = document.getElementById('patient-name').value.trim();
+            if (!name) {
+                showToast('Please enter patient name first.', 'error');
+                return;
+            }
+            addLogItem('Pending');
+            showToast('Saved patient entry to queue log.', 'info');
+        }
+
+        function addLogItem(status) {
+            const name = document.getElementById('patient-name').value.trim() || 'Anonymous Patient';
+            const labId = document.getElementById('patient-id').value.trim() || 'LAB-0000';
+            const countryCode = document.getElementById('country-code').value;
+            const phone = document.getElementById('patient-phone').value.trim() || 'N/A';
+            const category = document.getElementById('test-category').value;
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const newItem = {
+                time: timeStr,
+                name: name,
+                id: labId,
+                phone: `+${countryCode} ${phone}`,
+                category: category,
+                status: status,
+                fileName: currentUploadedFile ? currentUploadedFile.name : 'Lab_Result.pdf'
+            };
+
+            sampleHistory.unshift(newItem);
+            renderLogs();
+        }
+
+        function renderLogs() {
+            const tbody = document.getElementById('dispatch-history-body');
+            tbody.innerHTML = '';
+
+            const searchTerm = (document.getElementById('log-search')?.value || '').toLowerCase();
+
+            const filtered = sampleHistory.filter(item => 
+                item.name.toLowerCase().includes(searchTerm) || 
+                item.id.toLowerCase().includes(searchTerm) ||
+                item.phone.toLowerCase().includes(searchTerm)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-400">No dispatch records found.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                
+                const statusBadge = item.status === 'Sent' 
+                    ? `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200"><i class="fa-solid fa-check mr-1"></i>Sent</span>`
+                    : `<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200"><i class="fa-solid fa-clock mr-1"></i>Pending</span>`;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-mono text-slate-500">${item.time}</td>
+                    <td class="py-3 px-4 font-bold text-slate-900">${escapeHtml(item.name)}</td>
+                    <td class="py-3 px-4 font-mono text-slate-600">${escapeHtml(item.id)}</td>
+                    <td class="py-3 px-4 font-mono text-slate-600">${escapeHtml(item.phone)}</td>
+                    <td class="py-3 px-4 text-slate-600">${escapeHtml(item.category)}</td>
+                    <td class="py-3 px-4">${statusBadge}</td>
+                    <td class="py-3 px-4 text-right">
+                        <button onclick="reDispatch(${index})" class="text-teal-600 hover:text-teal-800 font-medium text-xs px-2 py-1 rounded hover:bg-teal-50">
+                            <i class="fa-brands fa-whatsapp"></i> Resend
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterLogs() {
+            renderLogs();
+        }
+
+        function reDispatch(index) {
+            const item = sampleHistory[index];
+            document.getElementById('patient-name').value = item.name;
+            document.getElementById('patient-id').value = item.id;
+            const parts = item.phone.split(' ');
+            if (parts.length > 1) {
+                document.getElementById('patient-phone').value = parts[1];
+            }
+            updatePreview();
+            showToast(`Loaded details for ${item.name}`, 'info');
+        }
+
+        function resetForm() {
+            document.getElementById('dispatch-form').reset();
+            removeFile();
+            changeTemplate('normal');
+            updatePreview();
+            showToast('Form cleared', 'info');
+        }
+
+        function copyGeneratedLink() {
+            const linkInput = document.getElementById('generated-link');
+            linkInput.select();
+            document.execCommand('copy');
+            showToast('WhatsApp link copied to clipboard!');
+        }
+
+        function exportLogsCSV() {
+            let csvContent = "data:text/csv;charset=utf-8,Time,Patient Name,Lab ID,Phone,Category,Status\n";
+            sampleHistory.forEach(row => {
+                csvContent += `"${row.time}","${row.name}","${row.id}","${row.phone}","${row.category}","${row.status}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `WhatsApp_Dispatch_Log_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('CSV export downloaded');
+        }
+
+        function toggleApiDocs() {
+            const modal = document.getElementById('api-modal');
+            modal.classList.toggle('hidden');
+        }
+
+        // Custom Toast System
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-slate-900 text-white';
+            let iconClass = 'fa-solid fa-circle-check text-emerald-400';
+            
+            if (type === 'error') {
+                bgClass = 'bg-red-900 text-white';
+                iconClass = 'fa-solid fa-triangle-exclamation text-red-300';
+            } else if (type === 'info') {
+                bgClass = 'bg-teal-900 text-white';
+                iconClass = 'fa-solid fa-circle-info text-teal-300';
+            }
+
+            toast.className = `${bgClass} shadow-xl rounded-xl px-4 py-3 flex items-center space-x-3 text-xs font-medium border border-white/10 transition-all duration-300 transform translate-y-2 opacity-0`;
+            toast.innerHTML = `
+                <i class="${iconClass} text-base"></i>
+                <span>${escapeHtml(message)}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Auto remove
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function escapeHtml(text) {
+            return text ? text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
+        }
+    </script>
+</body>
+</html>
